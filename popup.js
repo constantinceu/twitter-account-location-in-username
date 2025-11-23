@@ -2,38 +2,39 @@
 const TOGGLE_KEY = 'extension_enabled';
 const DEFAULT_ENABLED = true;
 
+// Unified API for Chrome + Firefox
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 // Get toggle element
 const toggleSwitch = document.getElementById('toggleSwitch');
 const status = document.getElementById('status');
 
 // Load current state
-chrome.storage.local.get([TOGGLE_KEY], (result) => {
+browserAPI.storage.local.get(TOGGLE_KEY).then((result) => {
   const isEnabled = result[TOGGLE_KEY] !== undefined ? result[TOGGLE_KEY] : DEFAULT_ENABLED;
   updateToggle(isEnabled);
 });
 
 // Toggle click handler
-toggleSwitch.addEventListener('click', () => {
-  chrome.storage.local.get([TOGGLE_KEY], (result) => {
-    const currentState = result[TOGGLE_KEY] !== undefined ? result[TOGGLE_KEY] : DEFAULT_ENABLED;
-    const newState = !currentState;
-    
-    chrome.storage.local.set({ [TOGGLE_KEY]: newState }, () => {
-      updateToggle(newState);
-      
-      // Notify content script to update
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            type: 'extensionToggle',
-            enabled: newState
-          }).catch(() => {
-            // Tab might not have content script loaded yet, that's okay
-          });
-        }
+toggleSwitch.addEventListener('click', async () => {
+  const result = await browserAPI.storage.local.get(TOGGLE_KEY);
+  const currentState = result[TOGGLE_KEY] !== undefined ? result[TOGGLE_KEY] : DEFAULT_ENABLED;
+  const newState = !currentState;
+
+  await browserAPI.storage.local.set({ [TOGGLE_KEY]: newState });
+  updateToggle(newState);
+
+  try {
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      await browserAPI.tabs.sendMessage(tabs[0].id, {
+        type: 'extensionToggle',
+        enabled: newState
       });
-    });
-  });
+    }
+  } catch (e) {
+    // Content script may not be loaded yet — ignore
+  }
 });
 
 function updateToggle(isEnabled) {
@@ -47,4 +48,3 @@ function updateToggle(isEnabled) {
     status.style.color = '#536471';
   }
 }
-
