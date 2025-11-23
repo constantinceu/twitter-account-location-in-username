@@ -1,90 +1,72 @@
-# Twitter Account Location Flag Chrome Extension
+# Twitter Account Location Flag Browser Extension
 
-A Chrome extension that displays country flag emojis next to Twitter/X usernames based on the account's location information.
+A browser extension (Chrome + Firefox) that displays **country flag emojis** next to Twitter/X usernames based on the account’s publicly available location information.
 
 ## Features
 
-- Automatically detects usernames on Twitter/X pages
-- Queries Twitter's GraphQL API to get account location information
-- Displays the corresponding country flag emoji next to usernames
-- Works with dynamically loaded content (infinite scroll)
-- Caches location data to minimize API calls
+- 🚩 Adds a country flag next to Twitter/X usernames  
+- 🔍 Uses Twitter’s GraphQL API to detect account location  
+- ⚡ Supports infinite scrolling and dynamically loaded content  
+- 📦 Caches results to reduce API calls  
+- 🔐 Uses the user’s own authenticated session (no external servers)
+
+---
 
 ## Installation
 
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in the top right)
-4. Click "Load unpacked"
-5. Select the directory containing this extension
-6. The extension will now be active on Twitter/X pages
+### Chrome / Chromium-based Browsers (Brave, Edge, Opera, Vivaldi)
+
+1. Download or clone this repository  
+2. Open `chrome://extensions/`  
+3. Enable **Developer mode** (top-right corner)  
+4. Click **Load unpacked**  
+5. Select the folder containing this extension  
+6. Visit Twitter/X — the extension will activate automatically
+
+### Firefox Permanent Installation
+
+1. Download or clone this repository
+2. Install the Firefox Developer edition: https://www.firefox.com/en-GB/channel/desktop/?redirect_source=mozilla-org
+3. Open about:config in Firefox and set xpinstall.signatures.required to false
+4. Compress: content.js, countryFlags.js, manifest.json, pageScript.js, popup.html, popup.js into a single .zip File
+5. Open about:addons in Firefox and drag the .zip Folder in the Window.
+6. Give necessary Permissions and you are good to go.
+
+#### Temporary Installation (recommended)
+
+1. Download or clone this repository  
+2. Open Firefox and navigate to:  
+   `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on**  
+4. Select any file inside the extension directory (e.g., `manifest.json`)  
+5. The extension will load and work until Firefox is closed
+---
 
 ## How It Works
 
-1. The extension runs a content script on all Twitter/X pages
-2. It identifies username elements in tweets and user profiles
-3. For each username, it queries Twitter's GraphQL API endpoint (`AboutAccountQuery`) to get the account's location
-4. The location is mapped to a flag emoji using the country flags mapping
-5. The flag emoji is displayed next to the username
+1. A content script scans Twitter/X pages for username elements  
+2. When a username is detected, a page-injected script requests profile data from Twitter’s GraphQL `AboutAccountQuery`  
+3. The returned location (if available) is mapped to a flag emoji  
+4. The emoji is added next to all matching username elements on the page
+
+---
 
 ## Files
 
-- `manifest.json` - Chrome extension configuration
-- `content.js` - Main content script that processes the page and injects page scripts for API calls
-- `countryFlags.js` - Country name to flag emoji mapping
-- `README.md` - This file
+| File                 | Purpose |
+|----------------------|---------|
+| `manifest.json`      | Extension configuration (Manifest V3) |
+| `content.js`         | Scans the page and communicates with page script |
+| `pageScript.js`      | Injected script with access to Twitter’s authenticated API |
+| `countryFlags.js`    | Maps country/location names to flag emojis |
+| `popup.html`         | Extension popup UI |
+| `popup.js`           | Toggle logic for enabling/disabling the extension |
+| `README.md`          | Documentation |
 
-## Technical Details
+---
 
-The extension uses a page script injection approach to make API requests. This allows it to:
-- Access the same cookies and authentication as the logged-in user
-- Make same-origin requests to Twitter's API without CORS issues
-- Work seamlessly with Twitter's authentication system
+## Twitter API Details
 
-The content script injects a script into the page context that listens for location fetch requests. When a username is detected, the content script sends a custom event to the page script, which makes the API request and returns the location data.
-
-## API Endpoint
-
-The extension uses Twitter's GraphQL API endpoint:
-```
+The extension uses the following GraphQL endpoint:
 https://x.com/i/api/graphql/XRqGa7EeokUU5kppkh13EA/AboutAccountQuery
-```
-
-With variables:
-```json
-{
-  "screenName": "username"
-}
-```
-
-The response contains `account_based_in` field in:
-```
-data.user_result_by_screen_name.result.about_profile.account_based_in
-```
-
-## Limitations
-
-- Requires the user to be logged into Twitter/X
-- Only works for accounts that have location information available
-- Country names must match the mapping in `countryFlags.js` (case-insensitive)
-- Rate limiting may apply if making too many requests
-
-## Privacy
-
-- The extension only queries public account information
-- No data is stored or transmitted to third-party servers
-- All API requests are made directly to Twitter/X servers
-- Location data is cached locally in memory
-
-## Troubleshooting
-
-If flags are not appearing:
-1. Make sure you're logged into Twitter/X
-2. Check the browser console for any error messages
-3. Verify that the account has location information available
-4. Try refreshing the page
-
-## License
-
-MIT
 
